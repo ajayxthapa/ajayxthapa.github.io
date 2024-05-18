@@ -10,4 +10,4 @@ Add a new file:
 ![](https://github.com/opengeos/leafmap/blob/master/docs/assets/logo.png)
 
 GIF Demo:
-![](https://i.gifer.com/embedded/download/31Kl.gif)
+![]([https://i.gifer.com/embedded/download/31Kl.gif](https://i.gifer.com/embedded/download/QUKf.gif))
