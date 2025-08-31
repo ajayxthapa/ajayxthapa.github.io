@@ -1,58 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Mapbox GL JS Example</title>
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
-    <style>
-        body { margin: 0; padding: 0; }
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Interactive Map</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="map"></div>
+    <h1>My Advanced Portfolio Map</h1>
+    <p>Use the layer control in the top right to explore different datasets.</p>
+    
+    <div id="map"></div>
 
-<script>
-    // YOUR MAPBOX ACCESS TOKEN
-    mapboxgl.accessToken = 'pk.eyJ1IjoiYXRoYXBhMjAyNCIsImEiOiJjbWV6Mmgxb2IxZnp4MmxxMnRtZXl2Y3YzIn0.wOjvaBAkk20U9OHPoMFFrg'; 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-    const map = new mapboxgl.Map({
-        container: 'map', // container ID
-        style: 'mapbox://styles/mapbox/streets-v12', // style URL
-        center: [-74.0060, 40.7128], // starting position [lng, lat]
-        zoom: 12 // starting zoom
-    });
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet.heat.js"></script>
 
-    map.on('load', () => {
-        // Add a GeoJSON source with points
-        map.addSource('my-points', {
-            'type': 'geojson',
-            'data': {
-                'type': 'FeatureCollection',
-                'features': [{
-                    'type': 'Feature',
-                    'geometry': { 'type': 'Point', 'coordinates': [-74.0060, 40.7128] },
-                    'properties': { 'title': 'New York City' }
-                }]
-            }
-        });
-
-        // Add a layer to display the points
-        map.addLayer({
-            'id': 'points-layer',
-            'type': 'circle',
-            'source': 'my-points',
-            'paint': {
-                'circle-radius': 10,
-                'circle-color': '#007cbf'
-            }
-        });
-    });
-</script>
+    <script src="script.js"></script>
 </body>
 </html>
-
-
-

@@ -1,30 +1,118 @@
-// --- MINIMAL DEBUGGING SCRIPT ---
-
-// 1. Initialize map
+// ====== MAP INITIALIZATION ======
+// Initialize the map and set its view to a global perspective
 const map = L.map('map').setView([20, 10], 3);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+// ====== BASEMAPS ======
+// OpenStreetMap layer
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map);
+}).addTo(map); // Add to map by default
 
-// 2. Try to fetch ONE data file
-console.log("Attempting to fetch GeoJSON data...");
+// Satellite layer
+const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+});
 
-fetch('data/points-of-interest.geojson')
-    .then(response => {
-        // Check if the server responded with an error (like 404 Not Found)
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+// ====== GEOJSON DATA LAYERS ======
+
+// --- 1. Custom Markers Layer ---
+// Define a custom icon
+const customIcon = L.icon({
+    iconUrl: 'icons/location-pin.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+});
+
+// Create a layer for the points of interest using the custom icon
+const pointsLayer = L.geoJSON(null, {
+    pointToLayer: function (feature, latlng) {
+        return L.marker(latlng, { icon: customIcon });
+    },
+    onEachFeature: function (feature, layer) {
+        if (feature.properties && feature.properties.name) {
+            layer.bindPopup(`<strong>${feature.properties.name}</strong>`);
         }
-        return response.json();
-    })
+    }
+});
+
+// --- 2. Heatmap Layer ---
+const heatLayer = L.heatLayer([], { radius: 25, blur: 15 });
+
+// --- Fetch data for points and heatmap (they use the same data source) ---
+fetch('data/points-of-interest.geojson')
+    .then(response => response.json())
     .then(data => {
-        // If the data was fetched and parsed correctly, this will run
-        console.log("GeoJSON data loaded successfully!");
-        L.geoJSON(data).addTo(map);
-        alert("SUCCESS! The data file was loaded and markers should be visible.");
+        // Add GeoJSON data to the points layer
+        pointsLayer.addData(data);
+        
+        // Prepare data for the heatmap
+        const heatData = data.features.map(feature => {
+            return [feature.geometry.coordinates[1], feature.geometry.coordinates[0], 1.0]; // lat, lng, intensity
+        });
+        heatLayer.setLatLngs(heatData);
     })
-    .catch(error => {
-        // If ANY part of the above process fails, this will run
-        console.error('CRITICAL ERROR:', error);
-        alert(`ERROR: Could not load the GeoJSON data file.\n\nCheck the console (F12) for a '404 Not Found' error.\n\nDetails: ${error}`);
-    });
+    .catch(error => console.error('Error loading Points of Interest data:', error));
+
+
+// --- 3. Choropleth Layer ---
+// An empty layer group to hold the choropleth, added to map by default
+const choroplethLayer = L.layerGroup().addTo(map);
+
+// Color function based on population
+function getColor(d) {
+    return d > 1000000000 ? '#800026' : d > 500000000 ? '#BD0026' : d > 200000000 ? '#E31A1C' : d > 100000000 ? '#FC4E2A' : d > 50000000  ? '#FD8D3C' : d > 20000000  ? '#FEB24C' : d > 10000000  ? '#FED976' : '#FFEDA0';
+}
+
+// Style function for country polygons
+function style(feature) {
+    return {
+        fillColor: getColor(feature.properties.pop_est),
+        weight: 1,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+    };
+}
+
+// Fetch world population data and add to the choropleth layer
+fetch('data/world-population.geojson')
+    .then(response => response.json())
+    .then(data => {
+        L.geoJSON(data, { style: style }).addTo(choroplethLayer);
+    })
+    .catch(error => console.error('Error loading World Population data:', error));
+
+
+// --- 4. Choropleth Legend ---
+const legend = L.control({ position: 'bottomright' });
+legend.onAdd = function (map) {
+    const div = L.DomUtil.create('div', 'info legend');
+    const grades = [0, 10000000, 50000000, 100000000, 200000000, 500000000, 1000000000];
+    div.innerHTML += '<strong>Population</strong><br>';
+    for (let i = 0; i < grades.length; i++) {
+        div.innerHTML += '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' + (grades[i] / 1000000) + (grades[i + 1] ? 'M &ndash; ' + (grades[i + 1] / 1000000) + 'M<br>' : 'M+');
+    }
+    return div;
+};
+legend.addTo(map);
+
+
+// ====== LAYER CONTROL ======
+// Add all the layers to the layer control.
+const baseMaps = {
+    "OpenStreetMap": osm,
+    "Satellite": satellite
+};
+
+const overlayMaps = {
+    "Population": choroplethLayer,
+    "Points of Interest": pointsLayer,
+    "Heatmap": heatLayer
+};
+
+// Add default layers to map
+choroplethLayer.addTo(map);
+
+L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
