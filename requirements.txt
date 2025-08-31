@@ -1,7 +1,0 @@
-pandas
-geopandas
-folium
-plotly
-scikit-learn
-pycountry_convert
-matplotlib
