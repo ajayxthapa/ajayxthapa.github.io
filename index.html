@@ -3,24 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Satellite Tracker</title>
-
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Cesium.js"></script>
-    <link href="https://cesium.com/downloads/cesiumjs/releases/1.119/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+    <title>My Interactive Map</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/satellite.js@4.1.4/dist/satellite.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <h1>My Portfolio Map</h1>
+    <p>Here are some points of interest around the world. Click on a marker to learn more!</p>
     
-    <div id="cesiumContainer"></div>
+    <div id="map"></div>
 
-    <div id="loadingOverlay">
-        <div class="loading-text">Loading Satellite Data...</div>
-    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <script src="app.js"></script>
-
+    <script src="script.js"></script>
 </body>
 </html>
