@@ -1,5 +1,5 @@
 // ====== MAP INITIALIZATION ======
-// Initialize the map and set its view to a global perspective
+// Initialize map and set its view to a global perspective
 const map = L.map('map').setView([20, 10], 3);
 
 // ====== BASEMAPS ======
