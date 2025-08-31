@@ -35,7 +35,7 @@ TIME_SERIES_HTML = os.path.join(OUTPUT_DIR, "population_over_time.html")
 # Find the most recent year with population data from column names
 # We assume columns are like '1960', '1961', ..., '2022'
 try:
-    df_temp = pd.read_csv(POPULATION_CSV_PATH, skiprows=4)
+    df_temp = pd.read_csv(POPULATION_CSV_PATH)
     year_columns = [col for col in df_temp.columns if col.isdigit()]
     RECENT_YEAR = max(year_columns)
 except FileNotFoundError:
@@ -51,11 +51,10 @@ def load_and_preprocess_data():
         gpd.GeoDataFrame: A GeoDataFrame ready for analysis.
     """
     print("Loading and preprocessing data...")
-    # Load population data, skipping metadata rows at the top
-    pop_df = pd.read_csv(POPULATION_CSV_PATH, skiprows=4)
-    
-    # --- FIX: Robustly rename the first column to 'country' ---
-    # This avoids KeyErrors if the source file's column name is not 'Country Name'.
+    # Load population data
+    pop_df = pd.read_csv(POPULATION_CSV_PATH)
+
+    # Robustly rename the first column to 'country'
     first_col_name = pop_df.columns[0]
     pop_df = pop_df.rename(columns={first_col_name: "country"})
     
