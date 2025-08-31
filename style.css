@@ -1,0 +1,38 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+h1, p {
+    text-align: center;
+    padding: 0 10px;
+}
+
+#map {
+    height: 80vh;
+    width: 90%;
+    margin: 20px auto;
+    border: 2px solid #aaa;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Legend Styling for Choropleth Map */
+.legend {
+    line-height: 18px;
+    color: #555;
+    background-color: white;
+    padding: 6px 8px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
