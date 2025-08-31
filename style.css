@@ -10,8 +10,9 @@ h1, p {
     padding: 0 10px;
 }
 
+/* This is the most important part! The map needs a defined height. */
 #map {
-    height: 80vh;
+    height: 80vh; /* 80% of the browser window's height */
     width: 90%;
     margin: 20px auto;
     border: 2px solid #aaa;

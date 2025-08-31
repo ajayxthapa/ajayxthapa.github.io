@@ -1,27 +1,30 @@
 // ====== MAP INITIALIZATION ======
+// Initialize the map and set its view to a global perspective
 const map = L.map('map').setView([20, 10], 3);
 
 // ====== BASEMAPS ======
+// OpenStreetMap layer
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).addTo(map); // Default basemap
+}).addTo(map); // Add to map by default
 
+// Satellite layer
 const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
 	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
 });
 
 // ====== GEOJSON DATA LAYERS ======
-// An empty layer group to hold our choropleth layer
-const choroplethLayer = L.layerGroup().addTo(map);
 
-// --- Custom Markers Layer ---
+// --- 1. Custom Markers Layer ---
+// Define a custom icon
 const customIcon = L.icon({
     iconUrl: 'icons/location-pin.png',
-    iconSize: [32, 32], // size of the icon
-    iconAnchor: [16, 32], // point of the icon which will correspond to marker's location
-    popupAnchor: [0, -32] // point from which the popup should open relative to the iconAnchor
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
 });
 
+// Create a layer for the points of interest using the custom icon
 const pointsLayer = L.geoJSON(null, {
     pointToLayer: function (feature, latlng) {
         return L.marker(latlng, { icon: customIcon });
@@ -33,23 +36,30 @@ const pointsLayer = L.geoJSON(null, {
     }
 });
 
-// --- Heatmap Layer ---
+// --- 2. Heatmap Layer ---
 const heatLayer = L.heatLayer([], { radius: 25, blur: 15 });
 
-// --- Fetch data for points and heatmap ---
+// --- Fetch data for points and heatmap (they use the same data source) ---
 fetch('data/points-of-interest.geojson')
     .then(response => response.json())
     .then(data => {
+        // Add GeoJSON data to the points layer
         pointsLayer.addData(data);
+        
+        // Prepare data for the heatmap
         const heatData = data.features.map(feature => {
-            // Heatmap needs [lat, lng, intensity]
-            return [feature.geometry.coordinates[1], feature.geometry.coordinates[0], 1]; 
+            // Heatmap needs [latitude, longitude, intensity]
+            return [feature.geometry.coordinates[1], feature.geometry.coordinates[0], 1.0]; 
         });
         heatLayer.setLatLngs(heatData);
-    });
+    })
+    .catch(error => console.error('Error loading points of interest data:', error));
 
-// --- Choropleth Layer ---
-// Color function
+// --- 3. Choropleth Layer ---
+// An empty layer group to hold the choropleth, added to map by default
+const choroplethLayer = L.layerGroup().addTo(map);
+
+// Color function based on population
 function getColor(d) {
     return d > 1000000000 ? '#800026' :
            d > 500000000  ? '#BD0026' :
@@ -61,7 +71,7 @@ function getColor(d) {
                               '#FFEDA0';
 }
 
-// Style function
+// Style function for country polygons
 function style(feature) {
     return {
         fillColor: getColor(feature.properties.pop_est),
@@ -73,24 +83,24 @@ function style(feature) {
     };
 }
 
-// Fetch world population data
+// Fetch world population data and add to the choropleth layer
 fetch('data/world-population.geojson')
     .then(response => response.json())
     .then(data => {
         L.geoJSON(data, { style: style }).addTo(choroplethLayer);
-    });
+    })
+    .catch(error => console.error('Error loading world population data:', error));
 
-// --- Choropleth Legend ---
+// --- 4. Choropleth Legend ---
 const legend = L.control({ position: 'bottomright' });
 legend.onAdd = function (map) {
     const div = L.DomUtil.create('div', 'info legend');
     const grades = [0, 10000000, 20000000, 50000000, 100000000, 200000000, 500000000, 1000000000];
     div.innerHTML += '<strong>Population</strong><br>';
-    // loop through our density intervals and generate a label with a colored square for each interval
     for (let i = 0; i < grades.length; i++) {
         div.innerHTML +=
             '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
-            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            (grades[i] / 1000000) + (grades[i + 1] ? 'M &ndash; ' + (grades[i + 1] / 1000000) + 'M<br>' : 'M+');
     }
     return div;
 };
@@ -103,9 +113,9 @@ const baseMaps = {
 };
 
 const overlayMaps = {
+    "Population": choroplethLayer,
     "Points of Interest": pointsLayer,
-    "Population Density": choroplethLayer,
     "Heatmap": heatLayer
 };
 
-L.control.layers(baseMaps, overlayMaps).addTo(map);
+L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
